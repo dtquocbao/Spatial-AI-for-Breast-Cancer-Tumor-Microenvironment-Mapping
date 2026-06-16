@@ -1,0 +1,6 @@
+Region A,Region B,Neighborhood enrichment z-score,Interpretation
+Tumor-like epithelial,Immune-rich,-29.204258935373637,Depleted
+Tumor-like epithelial,Inflammatory immune,-23.93413936616189,Depleted
+Tumor-like epithelial,Stromal-like,-26.91003123376308,Depleted
+Immune-rich,Inflammatory immune,-4.333252391419296,Depleted
+Tumor-like epithelial,Adipose-rich,-7.068251751858145,Depleted
