@@ -8,6 +8,28 @@ Exploratory analysis of **10x Visium** spatial transcriptomics data from human b
 - **Source:** [10x Genomics — Human Breast Cancer (Block A Section 1)](https://www.10xgenomics.com/datasets/human-breast-cancer-block-a-section-1-1-standard-1-1-0)
 - **Tissue:** Fresh frozen invasive ductal carcinoma (~3,798 spots under tissue)
 
+## Progress
+
+| Step | Notebook | Status | Output |
+|------|----------|--------|--------|
+| 1. Data exploration | `01_visium_breast_cancer_exploration.ipynb` | Done | Raw QC spatial plots |
+| 2. QC & preprocessing | `02_qc_preprocessing.ipynb` | Done | `data/processed/breast_cancer_visium_qc.h5ad` |
+| 3. Clustering | `03_clustering.ipynb` | Done | `data/processed/breast_cancer_visium_clustered.h5ad` |
+| 4. Spatial neighborhoods | `04_spatial_neighborhoods.ipynb` | Planned | — |
+| 5. Marker genes | `05_marker_genes.ipynb` | Planned | — |
+| 6. Baseline ML model | `06_baseline_ml_model.ipynb` | Planned | — |
+
+## Project layout
+
+```
+data/
+  raw/          # Downloaded 10x Visium files
+  processed/    # AnnData objects between pipeline steps
+notebooks/      # Analysis notebooks (run in order)
+outputs/figures/
+scripts/        # Batch scripts
+```
+
 ## Setup (Anaconda)
 
 Anaconda is installed on this machine, but `conda` may not be on your PATH in every terminal (e.g. Cursor, plain PowerShell). Use one of the options below.
@@ -53,27 +75,66 @@ To update the environment after dependency changes:
 conda env update -f environment.yml --prune
 ```
 
-## Run
+### Conda solver error (`libmamba` / `QueryFormat`)
 
-**Notebook (interactive):**
+If `conda install` fails with a libmamba solver error, use the classic solver:
 
 ```bash
-jupyter notebook notebooks/01_visium_breast_cancer_exploration.ipynb
+conda install -c conda-forge <package> --solver=classic
 ```
 
-**Script (batch):**
+## Run
+
+Run notebooks **in order** with the `spatial-breast-cancer` kernel:
+
+```bash
+jupyter notebook notebooks/
+```
+
+| Notebook | What it does |
+|----------|--------------|
+| `01_visium_breast_cancer_exploration.ipynb` | Download data, load with Scanpy, inspect AnnData, plot tissue image and per-spot QC |
+| `02_qc_preprocessing.ipynb` | Filter spots/genes, normalize, find HVGs, PCA → save QC object |
+| `03_clustering.ipynb` | Scale, PCA, neighbors, UMAP, Leiden clustering, spatial cluster plots → save clustered object |
+
+**Script (batch, step 1 only):**
 
 ```bash
 python scripts/01_visium_breast_cancer_qc.py
 ```
 
-Downloads are cached under `data/`. Figures are written to `outputs/figures/`.
+## Pipeline workflow
 
-## Workflow
+### Step 1 — Exploration (`01`)
 
-1. Download Visium breast cancer data (Squidpy helper → 10x CDN)
+1. Download Visium breast cancer data (Squidpy → 10x CDN) into `data/raw/`
 2. Load with `scanpy.read_visium`
 3. Inspect the `AnnData` object (`obs`, `var`, `obsm`, `uns['spatial']`)
-4. Plot H&E tissue image
-5. Plot total UMI counts per spot
-6. Plot number of detected genes per spot
+4. Plot H&E tissue image, total UMI counts per spot, and genes detected per spot
+
+### Step 2 — QC & preprocessing (`02`)
+
+1. Load raw Visium data and compute QC metrics
+2. Violin/scatter plots for `total_counts` and `n_genes_by_counts`
+3. Filter spots (`min_counts=1000`) and genes (`min_cells=3`)
+4. Normalize (`target_sum=1e4`) and log-transform
+5. Select 3,000 highly variable genes
+6. Run PCA and plot variance ratio
+7. Save → `data/processed/breast_cancer_visium_qc.h5ad`
+
+### Step 3 — Clustering (`03`)
+
+1. Load preprocessed `h5ad` from step 2
+2. Scale expression (`max_value=10`)
+3. PCA (30 PCs used for graph)
+4. Build kNN graph (`n_neighbors=10`)
+5. UMAP embedding
+6. Leiden clustering (`resolution=0.5`, key `leiden_0_5`)
+7. Plot clusters on UMAP and H&E tissue image
+8. Save → `data/processed/breast_cancer_visium_clustered.h5ad`
+
+### Next steps (planned)
+
+- **04** — Spatial neighborhood analysis (Squidpy)
+- **05** — Differential expression / marker genes per cluster
+- **06** — Baseline machine learning on spot-level features
