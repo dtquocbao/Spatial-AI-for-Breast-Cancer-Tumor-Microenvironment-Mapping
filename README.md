@@ -15,8 +15,8 @@ Exploratory analysis of **10x Visium** spatial transcriptomics data from human b
 | 1. Data exploration | `01_visium_breast_cancer_exploration.ipynb` | Done | Raw QC spatial plots |
 | 2. QC & preprocessing | `02_qc_preprocessing.ipynb` | Done | `data/processed/breast_cancer_visium_qc.h5ad` |
 | 3. Clustering | `03_clustering.ipynb` | Done | `data/processed/breast_cancer_visium_clustered.h5ad` |
-| 4. Spatial neighborhoods | `04_spatial_neighborhoods.ipynb` | Planned | — |
-| 5. Marker genes | `05_marker_genes.ipynb` | Planned | — |
+| 4. Marker genes | `04_marker_genes.ipynb` | Done | DE tables & marker plots |
+| 5. Spatial neighborhoods | `05_spatial_neighborhoods.ipynb` | Done | `data/processed/breast_cancer_spatial_analysis.h5ad` |
 | 6. Baseline ML model | `06_baseline_ml_model.ipynb` | Planned | — |
 
 ## Project layout
@@ -83,6 +83,8 @@ If `conda install` fails with a libmamba solver error, use the classic solver:
 conda install -c conda-forge <package> --solver=classic
 ```
 
+Clustering requires **`leidenalg`** and **`python-igraph`** (both listed in `environment.yml`).
+
 ## Run
 
 Run notebooks **in order** with the `spatial-breast-cancer` kernel:
@@ -95,7 +97,10 @@ jupyter notebook notebooks/
 |----------|--------------|
 | `01_visium_breast_cancer_exploration.ipynb` | Download data, load with Scanpy, inspect AnnData, plot tissue image and per-spot QC |
 | `02_qc_preprocessing.ipynb` | Filter spots/genes, normalize, find HVGs, PCA → save QC object |
-| `03_clustering.ipynb` | Scale, PCA, neighbors, UMAP, Leiden clustering, spatial cluster plots → save clustered object |
+| `03_clustering.ipynb` | Scale, PCA, neighbors, UMAP, Leiden clustering, resolution comparison, spatial cluster plots |
+| `04_marker_genes.ipynb` | Wilcoxon DE per cluster, known TME marker spatial/UMAP/dot plots |
+| `05_spatial_neighborhoods.ipynb` | Spatial graph, neighborhood enrichment, co-occurrence, centrality → save spatial object |
+| `06_baseline_ml_model.ipynb` | Baseline machine learning on spot-level features *(planned)* |
 
 **Script (batch, step 1 only):**
 
@@ -129,12 +134,27 @@ python scripts/01_visium_breast_cancer_qc.py
 3. PCA (30 PCs used for graph)
 4. Build kNN graph (`n_neighbors=10`)
 5. UMAP embedding
-6. Leiden clustering (`resolution=0.5`, key `leiden_0_5`)
+6. Leiden clustering (`resolution=0.5`, key `leiden_0_5`); compare resolutions 0.2–1.0
 7. Plot clusters on UMAP and H&E tissue image
 8. Save → `data/processed/breast_cancer_visium_clustered.h5ad`
 
-### Next steps (planned)
+### Step 4 — Marker genes (`04`)
 
-- **04** — Spatial neighborhood analysis (Squidpy)
-- **05** — Differential expression / marker genes per cluster
-- **06** — Baseline machine learning on spot-level features
+1. Load clustered `h5ad` from step 3
+2. Run `sc.tl.rank_genes_groups` (Wilcoxon) per `leiden_0_5`
+3. Visualize top markers per cluster
+4. Score known biology markers (epithelial/tumor, immune, stromal, endothelial)
+5. Dot plot of marker expression by cluster
+
+### Step 5 — Spatial neighborhoods (`05`)
+
+1. Load clustered `h5ad` from step 3
+2. Build spatial neighbor graph (`sq.gr.spatial_neighbors`)
+3. Visualize spatial connectivity on tissue
+4. Neighborhood enrichment between Leiden clusters
+5. Co-occurrence and centrality analysis
+6. Save → `data/processed/breast_cancer_spatial_analysis.h5ad`
+
+### Next step (planned)
+
+- **06** — Baseline machine learning on spot-level features (cluster labels / TME phenotypes)
