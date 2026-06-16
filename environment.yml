@@ -9,3 +9,4 @@ dependencies:
   - jupyter
   - ipykernel
   - python-igraph
+  - leidenalg
