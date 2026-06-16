@@ -1,0 +1,21 @@
+# Downloaded Visium data (large)
+data/
+
+# Generated figures and intermediate outputs
+outputs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.conda/
+
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

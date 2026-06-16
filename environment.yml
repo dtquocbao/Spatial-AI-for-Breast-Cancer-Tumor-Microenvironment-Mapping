@@ -1,0 +1,10 @@
+name: spatial-breast-cancer
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - scanpy>=1.10
+  - squidpy>=1.4
+  - matplotlib>=3.8
+  - jupyter
+  - ipykernel
