@@ -5,6 +5,7 @@ Dataset: V1_Breast_Cancer_Block_A_Section_1 (10x Genomics Visium demo).
 """
 
 from pathlib import Path
+import warnings
 
 import matplotlib.pyplot as plt
 import scanpy as sc
@@ -12,7 +13,7 @@ import squidpy as sq
 
 SAMPLE_ID = "V1_Breast_Cancer_Block_A_Section_1"
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "outputs" / "figures"
-DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+DATA_ROOT = Path(__file__).resolve().parents[1] / "data" / "raw"
 DATA_DIR = DATA_ROOT / SAMPLE_ID
 
 
@@ -20,14 +21,18 @@ def download_visium_data(sample_id: str = SAMPLE_ID, data_root: Path = DATA_ROOT
     """Download 10x Visium breast cancer data and return the on-disk folder."""
     data_root.mkdir(parents=True, exist_ok=True)
     print(f"Downloading Visium dataset: {sample_id}")
-    sq.datasets.visium(sample_id=sample_id, base_dir=data_root)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Variable names are not unique")
+        sq.datasets.visium(sample_id=sample_id, base_dir=data_root)
     print(f"Saved to: {data_root / sample_id}")
     return data_root / sample_id
 
 
 def load_visium_with_scanpy(data_dir: Path, sample_id: str = SAMPLE_ID) -> sc.AnnData:
     """Load Visium count matrix and spatial metadata with Scanpy."""
-    adata = sc.read_visium(path=data_dir)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Variable names are not unique")
+        adata = sc.read_visium(path=data_dir)
     adata.var_names_make_unique()
     adata.obs["sample"] = sample_id
     return adata
