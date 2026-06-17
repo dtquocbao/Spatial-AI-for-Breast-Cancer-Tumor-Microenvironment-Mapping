@@ -1,0 +1,3 @@
+Model,ROC AUC
+Gene expression only,0.9519458083287872
+Gene + spatial context,0.9535938352427713

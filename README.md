@@ -17,7 +17,24 @@ Exploratory analysis of **10x Visium** spatial transcriptomics data from human b
 | 3. Clustering | `03_clustering.ipynb` | Done | `data/processed/breast_cancer_visium_clustered.h5ad` |
 | 4. Marker genes | `04_marker_genes.ipynb` | Done | DE tables & marker plots |
 | 5. Spatial neighborhoods | `05_spatial_neighborhoods.ipynb` | Done | `data/processed/breast_cancer_spatial_analysis.h5ad` |
-| 6. Baseline ML model | `06_baseline_ml_model.ipynb` | Planned | — |
+| 6. Baseline ML model | `06_baseline_ml_model.ipynb` | Done | Immune-hotspot classifiers |
+| 7. Spatial context model | `07_spatial_context_model.ipynb` | Done | Gene vs. gene+context AUC comparison |
+| — | `05B_tumor_immune_interaction.ipynb` | Done | Region-level interaction table |
+
+## Conference report (Quarto)
+
+A conference-style write-up with figure references lives in `reports/conference_report.qmd`.
+
+```bash
+# 1. Export figures from processed data
+python scripts/export_report_figures.py
+
+# 2. Render HTML or PDF (install Quarto: https://quarto.org)
+quarto render reports/conference_report.qmd
+```
+
+Output: `reports/conference_report.html` (or `.pdf`).
+
 
 ## Project layout
 
@@ -100,7 +117,10 @@ jupyter notebook notebooks/
 | `03_clustering.ipynb` | Scale, PCA, neighbors, UMAP, Leiden clustering, resolution comparison, spatial cluster plots |
 | `04_marker_genes.ipynb` | Wilcoxon DE per cluster, known TME marker spatial/UMAP/dot plots |
 | `05_spatial_neighborhoods.ipynb` | Spatial graph, neighborhood enrichment, co-occurrence, centrality → save spatial object |
-| `06_baseline_ml_model.ipynb` | Baseline machine learning on spot-level features *(planned)* |
+| `06_baseline_ml_model.ipynb` | Logistic regression & random forest for immune-high spots |
+| `07_spatial_context_model.ipynb` | Compare gene-only vs. gene + spatial-context models |
+| `05B_tumor_immune_interaction.ipynb` | Annotated tumor–immune spatial interactions |
+
 
 **Script (batch, step 1 only):**
 
@@ -155,6 +175,22 @@ python scripts/01_visium_breast_cancer_qc.py
 5. Co-occurrence and centrality analysis
 6. Save → `data/processed/breast_cancer_spatial_analysis.h5ad`
 
-### Next step (planned)
+### Step 6 — Baseline ML (`06`)
 
-- **06** — Baseline machine learning on spot-level features (cluster labels / TME phenotypes)
+1. Load spatial analysis object; compute immune gene signature score
+2. Define immune-high binary label (`immune_score > 1`; 415/3,798 spots)
+3. Train logistic regression and random forest on 3,000 HVGs
+4. Random forest ROC AUC = **0.952** on held-out spots
+5. Top features: *PTPRC*, *HLA-DPB1*, *C1QA*, *CCL5*
+
+### Step 7 — Spatial context model (`07`)
+
+1. Add neighbor-averaged immune/epithelial/stromal scores and coordinates
+2. Compare random forest ROC AUC: gene-only **0.952** vs. gene+context **0.954**
+3. Conclusion: spatial context adds minimal predictive gain in this sample
+
+### Supplement — Tumor–immune interaction (`05B`)
+
+1. Annotate Leiden clusters into biological regions
+2. Quantify neighborhood enrichment between tumor-like and immune compartments
+3. Export interaction table → `reports/figures/tumor_immune_interaction_table.csv`
